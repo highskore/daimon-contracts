@@ -1,0 +1,32 @@
+Eip3009Sigil::check1271
+├── given the config was never initialized
+│   └── it should revert with PolicyNotInitialized
+├── given a fully well-formed voucher to an allowlisted payee within the cap and window
+│   └── it should return VALIDATION_SUCCESS
+├── given the requesting sender is not the configured token
+│   └── it should return VALIDATION_FAILED
+├── given the app domain separator does not match the configured token domain
+│   └── it should return VALIDATION_FAILED
+├── given the inner blob length is not exactly the six-word content length
+│   └── it should return VALIDATION_FAILED
+├── given the supplied fields do not hash to the signed contentsHash (soundness anchor)
+│   └── it should return VALIDATION_FAILED
+├── given the authorization payer (from) is not the signing account
+│   └── it should return VALIDATION_FAILED
+├── given the voucher is expired (block.timestamp >= validBefore)
+│   └── it should return VALIDATION_FAILED
+├── given the voucher is not yet valid (block.timestamp <= validAfter)
+│   └── it should return VALIDATION_FAILED
+├── given the voucher is strictly inside the (validAfter, validBefore) window
+│   └── it should return VALIDATION_SUCCESS
+├── given the payee equals solady's reserved set sentinel
+│   └── it should return VALIDATION_FAILED without bubbling a revert
+├── given the payee is not on the allowlist
+│   └── it should return VALIDATION_FAILED
+├── given an empty payee allowlist
+│   └── it should deny every payee (default-deny)
+└── given the value exceeds the per-authorization cap
+    ├── when the value is exactly the cap
+    │   └── it should return VALIDATION_SUCCESS
+    └── when the value is one above the cap
+        └── it should return VALIDATION_FAILED

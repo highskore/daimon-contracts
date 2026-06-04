@@ -1,0 +1,12 @@
+IdLib
+├── toMandateId
+│   ├── given the same mandate
+│   │   └── it should derive the same id (deterministic)
+│   └── given a different salt
+│       └── it should derive a different id
+├── toActionId
+│   └── given a different selector
+│       └── it should derive a different id
+└── toConfigId
+    └── given the same (mandateId, actionId)
+        └── it should derive the same id (deterministic)

@@ -1,0 +1,12 @@
+WebAuthnValidator::isValidSignature
+├── given the account has no installed pubkey
+│   └── when any signature is checked
+│       └── it should return false (sentinel: both coords zero)
+├── given the account has installed a pubkey
+│   ├── when the signature is a well-formed but invalid WebAuthnAuth
+│   │   └── it should return false (verification fails, no revert)
+│   └── when the signature blob is not decodable as a WebAuthnAuth
+│       └── it should revert (abi.decode of garbage)
+└── given the account has installed a pubkey [KNOWN GAP]
+    └── when a fully valid P256 WebAuthnAuth over the challenge is supplied
+        └── it should return true  (NOT COVERED — needs a real P256 fixture; see notes)

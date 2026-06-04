@@ -1,0 +1,18 @@
+Daimon::isValidSignature (MANDATE-mode / attestation)
+├── given a bound signing mandate (AttestationSigil gating dApp + hash)
+│   ├── and the requesting dApp + hash are allowlisted and the session key signed
+│   │   └── it should return the ERC-1271 magic value
+│   ├── and the requesting dApp is NOT allowlisted
+│   │   └── it should NOT accept (anti-phishing)
+│   ├── and the real hash is NOT allowlisted
+│   │   └── it should NOT accept (hash-pinned)
+│   ├── and an allowlisted-looking content blob is paired with a mismatched real hash
+│   │   └── it should NOT accept (the gate binds to the real hash, not the content)
+│   ├── and the signer is NOT the mandate's session key
+│   │   └── it should NOT accept
+│   └── and the payload tail is malformed (not a valid abi.encode(bytes,bytes))
+│       └── it should fail closed (not panic)
+├── given an unknown / unbound mandate id
+│   └── it should NOT accept (default-deny)
+└── given a bound mandate with NO signature sigil
+    └── it should NOT accept (signing capability is strictly opt-in)

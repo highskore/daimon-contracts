@@ -1,0 +1,21 @@
+RateLimitSigil::checkAction
+├── given the sigil was never configured
+│   └── it should revert with PolicyNotInitialized
+├── given a window with maxActions cap and no cooldown
+│   ├── when the count is below maxActions
+│   │   └── it should permit and increment the count
+│   ├── when the count has reached maxActions
+│   │   └── it should reject WITHOUT mutating state
+│   └── when a rejected action is retried after the window rolls
+│       └── it should permit (the count reset on rollover)
+├── given the window has fully elapsed
+│   └── it should roll: reset count to zero and re-anchor windowStart to now
+├── given a window boundary not yet reached
+│   └── it should keep the same windowStart (a fixed/tumbling window, not sliding)
+└── given a non-zero minCooldownSeconds
+    ├── when the gap since the last action is below the cooldown
+    │   └── it should reject WITHOUT mutating state
+    ├── when the gap since the last action meets the cooldown
+    │   └── it should permit
+    └── when it is the first action of the account's lifetime
+        └── it should permit (lastActionAt is zero, cooldown never bites)

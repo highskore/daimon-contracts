@@ -1,0 +1,15 @@
+AttestationSigil::initializeWithMultiplexer
+├── given a config with senders + hashes
+│   ├── it should store the sender allowlist
+│   ├── it should store the hash allowlist + set the hash-allowlist flag
+│   └── it should set the initialized marker
+├── given a config with an empty hash allowlist
+│   └── it should leave the hash-allowlist flag false (any hash) but mark initialized
+├── when configured
+│   └── it should emit SigilSet(id, multiplexer, account)
+├── given two different multiplexers
+│   └── it should key the config by multiplexer (independent allowlists)
+└── given a re-init of an already-configured id (re-bind)
+    ├── it should clear stale senders and stale hashes (replace, not merge)
+    └── and the new hash allowlist is empty
+        └── it should clear the prior pinned hash and flip the flag false (any hash)

@@ -1,0 +1,26 @@
+RootRegistry::_isOwner
+├── given the packed form ([20-byte validator][scheme sig])
+│   ├── when the sig is shorter than 20 bytes
+│   │   └── it should return false (no revert)
+│   ├── given an active scheme is installed
+│   │   ├── when the named scheme verifies the signature
+│   │   │   └── it should return true
+│   │   └── when the named scheme rejects the signature (wrong signer)
+│   │       └── it should return false
+│   └── given the named scheme is not installed
+│       └── it should return false
+├── given the explicit form (validator + inner sig)
+│   ├── given an active scheme is installed
+│   │   ├── when the signature is valid for that scheme
+│   │   │   └── it should return true
+│   │   └── when the signature is invalid for that scheme
+│   │       └── it should return false
+│   └── given the scheme is not installed
+│       └── it should return false
+└── given an OR-set of two active schemes
+    ├── when scheme A signs and is named
+    │   └── it should return true (A authorizes)
+    ├── when scheme B signs and is named
+    │   └── it should return true (B authorizes)
+    └── when A's signer signs but B is named
+        └── it should return false (the named scheme must verify)

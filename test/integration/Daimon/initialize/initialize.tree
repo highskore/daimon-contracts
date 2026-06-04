@@ -1,0 +1,13 @@
+Daimon::initialize
+├── given a root set of two or more schemes
+│   └── it should install every scheme and seed each validator's signer
+├── given a root set smaller than two schemes
+│   └── it should revert with RootSetTooSmall
+├── given validators and initDatas of different lengths
+│   └── it should revert with LengthMismatch
+├── given an already-initialized account
+│   └── it should revert (owner already set)
+├── given the single-argument initialize(address)
+│   └── it should revert with NotSupported
+└── given an already-initialized account and a second initialize carrying a genesis mandate
+    └── it should revert (once-only) and never bind the injected mandate post-deploy

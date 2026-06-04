@@ -1,0 +1,12 @@
+TimeFrameSigil::check1271
+├── given a configured satisfiable window [validAfter, validUntil]
+│   ├── when block.timestamp is inside the window
+│   │   └── it should return VALIDATION_SUCCESS
+│   ├── when block.timestamp < validAfter
+│   │   └── it should return VALIDATION_FAILED
+│   └── when block.timestamp > validUntil
+│       └── it should return VALIDATION_FAILED
+├── given validUntil == 0 (no upper bound)
+│   └── it should return VALIDATION_SUCCESS arbitrarily far in the future
+├── it should read NO content (empty content in-window succeeds)
+└── fuzz: success EXACTLY equals the window-membership predicate over satisfiable windows

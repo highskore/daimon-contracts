@@ -1,0 +1,86 @@
+OmniSigil::checkAction
+├── given the config was never initialized
+│   └── it should revert with PolicyNotInitialized
+├── given a static-offset recipient rule (v2-style router swap)
+│   ├── when the recipient word equals the locked account
+│   │   └── it should return VALIDATION_SUCCESS
+│   └── when the recipient word is an attacker
+│       └── it should return VALIDATION_FAILED
+├── given a recipient nested in dynamic calldata (UniversalRouter execute)
+│   ├── when the same call is re-encoded with a different commands length
+│   │   └── it should move the recipient to a different offset
+│   └── when a static rule tuned for one encoding meets another valid encoding
+│       ├── it should still reject the attacker under the tuned encoding
+│       └── it should wrongly reject the legitimate call under the other encoding
+├── given a single EQUAL rule
+│   ├── when the param equals the ref
+│   │   └── it should return VALIDATION_SUCCESS
+│   └── when the param differs from the ref
+│       └── it should return VALIDATION_FAILED
+├── given a single GREATER_THAN rule
+│   ├── when the param is strictly greater than the ref
+│   │   └── it should return VALIDATION_SUCCESS
+│   └── when the param equals the ref
+│       └── it should return VALIDATION_FAILED
+├── given a single LESS_THAN rule
+│   ├── when the param is strictly less than the ref
+│   │   └── it should return VALIDATION_SUCCESS
+│   └── when the param equals the ref
+│       └── it should return VALIDATION_FAILED
+├── given a single GREATER_THAN_OR_EQUAL rule
+│   ├── when the param equals the ref
+│   │   └── it should return VALIDATION_SUCCESS
+│   └── when the param is strictly less than the ref
+│       └── it should return VALIDATION_FAILED
+├── given a single LESS_THAN_OR_EQUAL rule
+│   ├── when the param equals the ref
+│   │   └── it should return VALIDATION_SUCCESS
+│   └── when the param is strictly greater than the ref
+│       └── it should return VALIDATION_FAILED
+├── given a single NOT_EQUAL rule
+│   ├── when the param differs from the ref
+│   │   └── it should return VALIDATION_SUCCESS
+│   └── when the param equals the ref
+│       └── it should return VALIDATION_FAILED
+├── given a single IN_RANGE rule (ref packs min<<128 | max)
+│   ├── when the param sits inside the inclusive range
+│   │   └── it should return VALIDATION_SUCCESS
+│   ├── when the param is below the minimum
+│   │   └── it should return VALIDATION_FAILED
+│   └── when the param is above the maximum
+│       └── it should return VALIDATION_FAILED
+├── given an AND tree over two rules
+│   ├── when both rules pass
+│   │   └── it should return VALIDATION_SUCCESS
+│   └── when only one rule passes
+│       └── it should return VALIDATION_FAILED
+├── given an OR tree over two rules
+│   ├── when neither rule passes
+│   │   └── it should return VALIDATION_FAILED
+│   └── when exactly one rule passes
+│       └── it should return VALIDATION_SUCCESS
+├── given a NOT tree over one rule
+│   ├── when the inner rule fails
+│   │   └── it should return VALIDATION_SUCCESS
+│   └── when the inner rule passes
+│       └── it should return VALIDATION_FAILED
+├── given a nested tree ((A AND B) OR (NOT C))
+│   ├── when the left AND branch holds
+│   │   └── it should return VALIDATION_SUCCESS
+│   ├── when only the right NOT branch holds
+│   │   └── it should return VALIDATION_SUCCESS
+│   └── when neither branch holds
+│       └── it should return VALIDATION_FAILED
+├── given a valueLimitPerUse cap
+│   ├── when the action value is at the cap
+│   │   └── it should return VALIDATION_SUCCESS
+│   └── when the action value exceeds the cap
+│       └── it should revert with ValueLimitExceeded
+└── given a limited rule that accrues usage
+    ├── when a single use is within the cumulative limit
+    │   └── it should return VALIDATION_SUCCESS
+    ├── when a single use exceeds the cumulative limit
+    │   └── it should return VALIDATION_FAILED
+    └── when two uses together cross the cumulative limit
+        ├── it should pass the first use
+        └── it should fail the second use that overflows the accrued total

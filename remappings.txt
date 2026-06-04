@@ -1,0 +1,10 @@
+forge-std/=node_modules/forge-std/src/
+solady/=node_modules/solady/src/
+@src/=src/
+@core/=src/core/
+@interfaces/=src/interfaces/
+@lib/=src/lib/
+@types/=src/types/
+@sigils/=src/sigils/
+@validators/=src/validators/
+@test/=test/

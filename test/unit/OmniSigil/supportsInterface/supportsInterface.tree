@@ -1,0 +1,11 @@
+OmniSigil::supportsInterface
+├── given the IERC165 interface id
+│   └── it should return true
+├── given the ISigilBase interface id
+│   └── it should return true
+├── given the IActionSigil interface id
+│   └── it should return true
+├── given the I1271Sigil interface id
+│   └── it should return false
+└── given an unknown interface id
+    └── it should return false

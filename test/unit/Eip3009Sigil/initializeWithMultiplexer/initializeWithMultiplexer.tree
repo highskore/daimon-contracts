@@ -1,0 +1,10 @@
+Eip3009Sigil::initializeWithMultiplexer
+├── given a config is installed
+│   ├── it should mark the instance initialized
+│   ├── it should expose the token, domain separator, and cap via config()
+│   ├── it should expose the payee via payeeAllowed()
+│   └── it should emit SigilSet with (id, multiplexer, account)
+├── given the config is keyed by multiplexer
+│   └── a different multiplexer's view reads back unconfigured
+└── given a re-init with a different payee allowlist
+    └── it should REPLACE the prior config (stale payee cleared, new payee set)

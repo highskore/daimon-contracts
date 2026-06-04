@@ -1,0 +1,13 @@
+SudoSigil::checkAction
+├── given arbitrary multi-word calldata
+│   └── it should return VALIDATION_SUCCESS
+├── given selector-only calldata (a 0-argument call)
+│   └── it should return VALIDATION_SUCCESS (no reverting slice)
+├── given fully empty calldata
+│   └── it should return VALIDATION_SUCCESS
+├── given a non-zero ETH value
+│   └── it should return VALIDATION_SUCCESS (no value cap)
+├── given an unconfigured config id
+│   └── it should return VALIDATION_SUCCESS (no PolicyNotInitialized guard)
+└── given any fuzzed inputs
+    └── it should always return VALIDATION_SUCCESS and never revert

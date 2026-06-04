@@ -1,0 +1,5 @@
+Daimon::installRoot
+├── given the caller is the owner (the account itself)
+│   └── it should install the new ROOT scheme
+└── given the caller is not the owner
+    └── it should revert

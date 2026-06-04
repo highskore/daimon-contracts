@@ -1,0 +1,8 @@
+SpendSigil::preCheck
+├── given the config was never initialized
+│   └── it should revert with PolicyNotInitialized
+└── given a configured (id, account) over a live token
+    ├── when it snapshots the balance and an outflow then occurs
+    │   └── postCheck should meter the balance delta against the snapshot
+    └── when a second execution is bracketed in the same tx
+        └── it should re-snapshot the balance so the prior snapshot does not leak

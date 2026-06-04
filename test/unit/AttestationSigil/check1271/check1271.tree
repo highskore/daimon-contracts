@@ -1,0 +1,27 @@
+AttestationSigil::check1271
+├── given an unconfigured config id
+│   └── it should revert (PolicyNotInitialized)
+├── given an allowlisted requesting dApp
+│   ├── and no hash allowlist
+│   │   └── it should return VALIDATION_SUCCESS for any hash
+│   ├── and the real hash is allowlisted
+│   │   └── it should return VALIDATION_SUCCESS
+│   └── and the real hash is NOT allowlisted
+│       └── it should return VALIDATION_FAILED
+├── given a non-allowlisted requesting dApp
+│   └── it should return VALIDATION_FAILED (anti-phishing)
+├── given the ANY_SENDER (address(0)) wildcard is configured
+│   └── it should return VALIDATION_SUCCESS for any requesting dApp
+├── given an empty sender allowlist
+│   └── it should return VALIDATION_FAILED for every request (default-deny)
+├── given several allowlisted dApps
+│   ├── it should accept each allowlisted dApp
+│   └── it should reject an off-list dApp
+├── given several allowlisted hashes
+│   ├── it should accept each allowlisted hash
+│   └── it should reject an off-list hash
+└── given the gate must bind to the REAL hash (security)
+    ├── and an allowlisted-looking content blob is paired with a mismatched real hash
+    │   └── it should return VALIDATION_FAILED (content cannot rescue a wrong hash)
+    └── and the allowlisted hash is paired with any content blob
+        └── it should return VALIDATION_SUCCESS (the hash gates, not the content)

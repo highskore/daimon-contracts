@@ -1,0 +1,23 @@
+SpendSigil::outcome-bracketed rolling spend cap (executeWithSig MANDATE path)
+├── given a spend mandate with a SpendSigil outcome cap (token, cap, Day, allowlist) bound
+│   ├── when a transfer within the cap runs
+│   │   └── it should execute, deliver the tokens, and debit `spent`
+│   ├── when two transfers cumulatively exceed the cap
+│   │   └── it should revert SpendCapExceeded and roll back the whole tx (no debit, no transfer)
+│   ├── when the rolling window has elapsed since the last charge
+│   │   └── it should reset `spent` to 0 and allow a fresh full-cap spend
+│   ├── when an approve to an allowlisted spender is left dangling (allowance != 0 post-exec)
+│   │   └── it should revert DanglingAllowance and roll back the whole tx
+│   ├── when an approve to an allowlisted spender is followed by use + reset in the same batch
+│   │   └── it should execute, charge the approval to the cap, and leave no dangling allowance
+│   ├── when an approve names a NON-allowlisted spender
+│   │   └── it should revert UnauthorizedExecution (checkAction blocks it)
+│   ├── when a permit() on the budgeted token is attempted
+│   │   └── it should revert UnauthorizedExecution (blanket-grant blocked)
+│   ├── when a setApprovalForAll() on the budgeted token is attempted
+│   │   └── it should revert UnauthorizedExecution (blanket-grant blocked)
+│   └── when an outflow leaves via an unparsed target (pre-existing allowance pull)
+│       └── it should still meter it via the balance-delta max() and revert if over cap
+└── given the same execution authorized by ROOT (owner)
+    └── when ROOT direct-executes an over-cap transfer
+        └── it should bypass the spend cap entirely (no outcome hooks on the ROOT path)

@@ -1,0 +1,10 @@
+RateLimitSigil::initializeWithMultiplexer
+├── given maxActions is zero
+│   └── it should revert with InvalidMaxActions
+├── given windowSeconds is zero
+│   └── it should revert with InvalidWindow
+├── given a well-formed config
+│   └── it should persist maxActions, windowSeconds, and minCooldownSeconds
+└── given the instance already has running state
+    └── when re-initialized
+        └── it should overwrite the config but NOT reset the rolling state

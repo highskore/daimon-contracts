@@ -1,0 +1,3 @@
+ModeLib
+└── given the modal dispatch bytes
+    └── it should expose MODE_ROOT=0x00, MODE_MANDATE=0x01, MANDATE_USE=0x00, MANDATE_BIND=0x01

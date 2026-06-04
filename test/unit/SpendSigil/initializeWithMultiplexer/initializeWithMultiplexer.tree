@@ -1,0 +1,5 @@
+SpendSigil::initializeWithMultiplexer
+├── given the budgeted token is the zero address
+│   └── it should revert with InvalidToken
+└── given a well-formed config
+    └── it should persist the token, cap, and period

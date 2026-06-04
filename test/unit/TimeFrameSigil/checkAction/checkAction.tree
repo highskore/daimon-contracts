@@ -1,0 +1,25 @@
+TimeFrameSigil::checkAction
+├── given an unsatisfiable window
+│   └── it can never reach checkAction — it is rejected at init (UnsatisfiableWindow)
+├── given a configured satisfiable window [validAfter, validUntil]
+│   ├── when block.timestamp is strictly inside the window
+│   │   └── it should return VALIDATION_SUCCESS
+│   ├── when block.timestamp == validAfter (lower bound inclusive)
+│   │   └── it should return VALIDATION_SUCCESS
+│   ├── when block.timestamp == validUntil (upper bound inclusive)
+│   │   └── it should return VALIDATION_SUCCESS
+│   ├── when block.timestamp < validAfter
+│   │   └── it should return VALIDATION_FAILED
+│   └── when block.timestamp > validUntil
+│       └── it should return VALIDATION_FAILED
+├── given validUntil == 0 (no upper bound)
+│   └── it should return VALIDATION_SUCCESS arbitrarily far in the future
+├── given validAfter == 0 (no lower bound)
+│   └── it should return VALIDATION_SUCCESS from the earliest timestamp
+├── given the open (0, 0) window
+│   └── it should return VALIDATION_SUCCESS at any timestamp
+├── given an uninitialized config
+│   └── it should read as the open (0, 0) window and return VALIDATION_SUCCESS
+├── it should read NO calldata (empty data in-window succeeds)
+├── it should enforce NO value cap (non-zero value in-window succeeds)
+└── fuzz: success EXACTLY equals the window-membership predicate over satisfiable windows

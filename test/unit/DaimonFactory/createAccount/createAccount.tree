@@ -1,0 +1,14 @@
+DaimonFactory::createAccount
+├── given a (salt, root set, no genesis mandates)
+│   ├── when the account is deployed
+│   │   └── it should deploy at the address getAddress predicts
+│   ├── when the account is deployed
+│   │   └── it should bootstrap the root set on the account
+│   └── given the same inputs twice
+│       └── when createAccount is called again
+│           └── it should be idempotent (return the same account)
+└── given a (salt, root set, one genesis mandate)
+    ├── when the account is summoned
+    │   └── it should deploy at the mandate-committed address and bind the mandate atomically
+    └── when a different genesis mandate is summoned
+        └── it should land at its own address, never hijacking the first mandate's account

@@ -1,0 +1,16 @@
+WebAuthnValidator::onInstall
+├── given a fully non-zero (x, y) public key
+│   └── when installed by the account
+│       └── it should store (x, y) keyed by the account (pubKeyOf)
+├── given a public key with x == 0 (half-zero)
+│   └── when installed
+│       └── it should revert with InvalidPubKey
+├── given a public key with y == 0 (half-zero)
+│   └── when installed
+│       └── it should revert with InvalidPubKey
+├── given a fully zero (0, 0) public key
+│   └── when installed
+│       └── it should revert with InvalidPubKey
+└── given the credential was set then uninstalled
+    └── when onUninstall is called
+        └── it should clear (x, y) (pubKeyOf == 0)

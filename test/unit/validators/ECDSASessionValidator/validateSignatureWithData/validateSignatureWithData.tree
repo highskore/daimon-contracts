@@ -1,0 +1,11 @@
+ECDSASessionValidator::validateSignatureWithData
+├── given data encodes a non-zero signer
+│   ├── when the signature is a valid [r,s,v] pack from that signer over the hash
+│   │   └── it should return true
+│   ├── when the signature is from a different signer
+│   │   └── it should return false
+│   └── when the signature is over a different hash
+│       └── it should return false
+└── given data encodes the zero address
+    └── when any signature is checked
+        └── it should return false

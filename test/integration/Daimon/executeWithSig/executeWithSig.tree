@@ -1,0 +1,37 @@
+Daimon::executeWithSig (direct-call relayer path)
+├── given a bound recipient-lock swap mandate
+│   ├── when the session key direct-executes a swap routed to the account
+│   │   └── it should execute (recipient receives output) and emit Executed
+│   ├── when the session key direct-executes a swap routed to an attacker
+│   │   └── it should revert with UnauthorizedExecution (sigil denies)
+│   ├── when the session key direct-executes against an unconfigured target
+│   │   └── it should revert with UnauthorizedExecution (default-deny)
+│   ├── when the session key direct-executes the right target with a wrong selector
+│   │   └── it should revert with UnauthorizedExecution (default-deny, selector-scoped)
+│   └── given the mandate has expired
+│       └── when the session key direct-executes an in-bounds swap
+│           └── it should revert with UnauthorizedExecution (expired)
+├── given a bound mandate and a 2-call batch
+│   ├── when every call complies with the recipient-lock
+│   │   └── it should execute both swaps and emit Executed
+│   └── when one call violates the recipient-lock
+│       └── it should revert with UnauthorizedExecution (whole batch, no call executes)
+├── given a successful direct execution at a nonce
+│   └── when the same nonce is replayed
+│       └── it should revert with ExecNonceUsed
+├── given a signed execution whose deadline is in the past
+│   └── when submitted
+│       ├── it should revert with Expired (before burning the nonce)
+│       └── it should leave the nonce reusable (a fresh, valid-deadline signature succeeds)
+├── given a ROOT signature over the execution digest
+│   └── when ROOT direct-executes a single call
+│       └── it should execute and emit Executed
+├── given a BIND+execute signature (enable inline) over the digest
+│   └── when the session key direct-executes a self-recipient swap
+│       └── it should execute, bind the mandate, and emit Executed
+├── given a signature with an unknown mode byte (0x02)
+│   └── when submitted
+│       └── it should revert with InvalidSignatureMode
+└── given an empty batch
+    └── when submitted
+        └── it should revert with NotSupported

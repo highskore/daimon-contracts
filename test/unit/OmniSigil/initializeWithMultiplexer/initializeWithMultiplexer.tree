@@ -1,0 +1,19 @@
+OmniSigil::initializeWithMultiplexer
+├── given a well-formed config
+│   ├── it should emit SigilSet(id, multiplexer, account)
+│   └── it should store the config so a later check finds it
+├── given an empty expression tree (no nodes)
+│   └── it should revert with EmptyExpressionTree
+├── given a root node index out of bounds
+│   └── it should revert with RootNodeIndexOutOfBounds
+├── given more rules than MAX_RULES (128)
+│   └── it should revert with TooManyRules
+├── given more nodes than MAX_NODES (256)
+│   └── it should revert with TooManyNodes
+├── given a leaf node referencing a rule index out of bounds
+│   └── it should revert with RuleIndexOutOfBounds
+└── given an operator node referencing a child index out of bounds
+    ├── when a NOT node points past the last node
+    │   └── it should revert with NodeChildIndexOutOfBounds
+    └── when an AND node points past the last node
+        └── it should revert with NodeChildIndexOutOfBounds

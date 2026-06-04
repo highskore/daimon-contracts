@@ -1,0 +1,12 @@
+RootRegistry::installRoot (genesis)
+├── given a fresh registry
+│   └── when a scheme is bootstrapped
+│       ├── it should mark the scheme installed
+│       ├── it should list the scheme in rootValidators
+│       ├── it should mark the scheme active immediately (installed == active)
+│       ├── it should initialize the scheme's credential (signerOf set)
+│       ├── it should emit RootValidatorInstalled
+│       └── it should authorize a signature from the bootstrapped signer at once
+└── given a scheme already installed
+    └── when the same scheme is bootstrapped again
+        └── it should revert with RootAlreadyInstalled

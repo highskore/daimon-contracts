@@ -1,0 +1,7 @@
+SudoSigil::initializeWithMultiplexer
+├── given empty initData
+│   └── it should emit SigilSet keyed by (id, multiplexer, account)
+├── given arbitrary (ignored) initData
+│   └── it should emit SigilSet
+└── after init
+    └── it should store nothing — a checkAction still allows the action

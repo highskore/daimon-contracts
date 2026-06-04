@@ -1,0 +1,24 @@
+WebAuthnSessionValidator::validateSignatureWithData
+├── given a valid software-P256 credential + assertion over the challenge
+│   ├── when user-verification is required (UV bit set)
+│   │   └── it should return true
+│   └── when user-verification is not required
+│       └── it should return true (the UV bit is present anyway)
+├── given a valid credential but a mismatched challenge
+│   └── it should return false (the challenge binds the digest)
+├── given an all-zero pubkey (the empty sentinel)
+│   └── when any signature is checked
+│       └── it should return false (early return before verify)
+├── given a half-zero pubkey (x or y == 0, a degenerate credential)
+│   ├── when y == 0
+│   │   └── it should return false (rejected by the OR guard, mirroring onInstall)
+│   ├── when x == 0
+│   │   └── it should return false (rejected by the OR guard)
+│   └── when the signature blob is undecodable
+│       └── it should return false (the OR guard short-circuits before signature decode)
+├── given a real pubkey + a well-formed but invalid WebAuthnAuth
+│   └── it should return false (verification fails, no revert)
+├── when the signature blob is not decodable as a WebAuthnAuth
+│   └── it should revert (abi.decode of garbage)
+└── when the credential blob is not decodable as (x, y, requireUV)
+    └── it should revert (abi.decode of garbage)

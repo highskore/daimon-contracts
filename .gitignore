@@ -1,0 +1,16 @@
+# Foundry
+out/
+cache/
+broadcast/
+
+# Node / pnpm
+node_modules/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Coverage
+lcov.info
+coverage/

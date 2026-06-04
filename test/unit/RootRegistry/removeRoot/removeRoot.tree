@@ -1,0 +1,12 @@
+RootRegistry::_removeRoot
+├── given the scheme is not installed
+│   └── when removing it
+│       └── it should revert with RootNotInstalled
+├── given exactly one scheme is installed
+│   └── when removing that last scheme
+│       └── it should revert with CannotRemoveLastRoot
+└── given two schemes are installed
+    └── when removing one of them
+        ├── it should uninstall that scheme (not installed, credential cleared)
+        ├── it should keep the other scheme installed
+        └── it should emit RootValidatorUninstalled

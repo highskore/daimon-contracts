@@ -1,0 +1,22 @@
+{
+  "name": "@daimon/contracts",
+  "version": "0.0.1",
+  "description": "Daimon smart contracts — account, ROOT auth, SESSION engine, policies",
+  "license": "MIT",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "coverage": "forge coverage --no-match-coverage '(^|/)(test|script)/' --report summary",
+    "coverage:check": "bash coverage-gate.sh",
+    "fmt": "forge fmt",
+    "lint": "solhint 'src/**/*.sol' --max-warnings 0",
+    "lint:fix": "solhint 'src/**/*.sol' --fix --noPrompt"
+  },
+  "dependencies": {
+    "forge-std": "github:foundry-rs/forge-std",
+    "solady": "github:vectorized/solady"
+  },
+  "devDependencies": {
+    "solhint": "^6.2.1"
+  }
+}

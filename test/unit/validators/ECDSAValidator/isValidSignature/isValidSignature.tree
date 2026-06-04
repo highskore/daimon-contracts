@@ -1,0 +1,11 @@
+ECDSAValidator::isValidSignature
+├── given the account has installed a signer
+│   ├── when the signature is a valid [r,s,v] pack from that signer
+│   │   └── it should return true
+│   ├── when the signature is from a different (wrong) signer
+│   │   └── it should return false
+│   └── when the signature is over a different digest
+│       └── it should return false
+└── given the account has no installed signer
+    └── when any signature is checked
+        └── it should return false

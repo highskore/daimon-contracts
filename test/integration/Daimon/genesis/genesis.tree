@@ -1,0 +1,9 @@
+Daimon::genesis (one-tx "summon + bind" — createAccount carries genesis mandates)
+├── given a createAccount carrying one genesis mandate
+│   └── when the account is summoned
+│       └── it should deploy at the mandate-committed address and bind the mandate (no separate bind tx)
+└── given a genesis-bound recipient-lock swap mandate
+    ├── when the session key direct-executes (USE) a swap routed to the allowlisted recipient
+    │   └── it should execute and deliver output (no BIND payload, no ROOT sig on first use)
+    └── when the session key direct-executes (USE) a swap routed to an attacker
+        └── it should revert with UnauthorizedExecution (sigil contains it, same bounds as a post-deploy bind)

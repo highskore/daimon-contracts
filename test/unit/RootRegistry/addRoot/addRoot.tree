@@ -1,0 +1,11 @@
+RootRegistry::_installRoot
+├── given a fresh registry
+│   └── when a scheme is installed
+│       ├── it should mark the scheme installed
+│       ├── it should initialize the scheme's credential
+│       ├── it should emit RootValidatorInstalled
+│       ├── it should report the scheme active immediately
+│       └── it should authorize a signature from the installed signer (owner-check true)
+└── given a scheme already installed
+    └── when the same scheme is installed again
+        └── it should revert with RootAlreadyInstalled

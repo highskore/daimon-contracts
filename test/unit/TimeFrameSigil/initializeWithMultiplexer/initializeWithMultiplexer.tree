@@ -1,0 +1,11 @@
+TimeFrameSigil::initializeWithMultiplexer
+├── given an unsatisfiable window (validAfter > validUntil, validUntil != 0)
+│   └── it should revert with UnsatisfiableWindow
+├── given an open-ended window (validUntil == 0) with a large validAfter
+│   └── it should accept and persist it (no upper bound, not treated as inverted)
+└── given a satisfiable window
+    ├── it should persist (validAfter, validUntil) keyed by (id, multiplexer, account)
+    ├── it should emit SigilSet keyed by (id, multiplexer, account)
+    ├── it should overwrite a prior window on re-initialization
+    ├── it should scope the config by msg.sender (the multiplexer)
+    └── it should drive the check paths (in-window succeeds, out-of-window fails)

@@ -1,0 +1,10 @@
+DaimonFactory::getAddress
+├── given a different salt
+│   └── when the address is predicted
+│       └── it should predict a different address
+├── given a different root set
+│   └── when the address is predicted
+│       └── it should predict a different address
+└── given different genesis mandates
+    └── when the address is predicted
+        └── it should predict a different address (and any mandate differs from none)

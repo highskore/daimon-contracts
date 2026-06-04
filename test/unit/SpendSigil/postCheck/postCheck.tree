@@ -1,0 +1,31 @@
+SpendSigil::postCheck
+├── given the config was never initialized
+│   └── it should revert with PolicyNotInitialized
+├── given the meter is max(global calldata-sum, balance-delta) over the executed call set
+│   ├── when the calldata-sum exceeds the balance delta (a charged approve that moved no balance)
+│   │   └── it should charge the calldata-sum
+│   └── when the balance delta exceeds the calldata-sum (an outflow the calldata parse missed)
+│       └── it should charge the balance delta
+├── given a rolling period
+│   ├── when two charges fall in the same window
+│   │   └── it should accrue them cumulatively
+│   └── when a charge falls after the window boundary
+│       └── it should reset spent to zero before accruing
+├── given the metered outflow would push cumulative spend over the cap
+│   └── it should revert with SpendCapExceeded
+├── given an approval the execution granted is left non-zero at post-check
+│   └── it should revert with DanglingAllowance
+├── given a blanket-grant call on the budgeted token (the ERC-20 allowance scan can't see it)
+│   ├── when it is a permit (EIP-2612)
+│   │   └── it should revert with BlanketGrantBlocked
+│   ├── when it is a setApprovalForAll (ERC-721/1155 operator)
+│   │   └── it should revert with BlanketGrantBlocked
+│   ├── when it is an authorizeOperator (ERC-777)
+│   │   └── it should revert with BlanketGrantBlocked
+│   └── when it is a Permit2 approve of the budgeted token
+│       └── it should revert with Permit2GrantBlocked
+└── given an increaseAllowance on the budgeted token
+    ├── when it is left un-reset at close
+    │   └── it should revert with DanglingAllowance
+    └── when it is reset to zero within the same batch
+        └── it should charge the added value via the global calldata-sum

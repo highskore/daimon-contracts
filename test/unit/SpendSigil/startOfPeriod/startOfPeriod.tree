@@ -1,0 +1,15 @@
+SpendSigil::startOfPeriod
+├── given the Minute period
+│   └── it should round the timestamp down to the start of the minute
+├── given the Hour period
+│   └── it should round the timestamp down to the start of the hour
+├── given the Day period
+│   └── it should round the timestamp down to UTC midnight
+├── given the Week period
+│   └── it should round the timestamp down to the Thursday-aligned week boundary
+├── given the Month period
+│   └── it should round the timestamp down to the 1st of the month at 00:00 UTC
+├── given the Year period
+│   └── it should round the timestamp down to Jan 1 at 00:00 UTC
+└── given the Forever period
+    └── it should return 0 (the never-resets sentinel)

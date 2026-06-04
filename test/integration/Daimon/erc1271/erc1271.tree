@@ -1,0 +1,8 @@
+Daimon::isValidSignature (ERC-1271 / ERC-7739)
+├── given a ROOT-mode signature over the nested PersonalSign digest
+│   ├── when signed by an installed ROOT signer
+│   │   └── it should return the 0x1626ba7e magic value
+│   └── when signed by a non-owner
+│       └── it should return 0xffffffff (failure)
+└── given a MANDATE-mode (0x01) signature
+    └── it should return 0xffffffff — MANDATE 1271 not yet supported

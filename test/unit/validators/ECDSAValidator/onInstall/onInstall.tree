@@ -1,0 +1,10 @@
+ECDSAValidator::onInstall
+├── given valid init data (a non-zero signer)
+│   └── when installed by the account
+│       └── it should store the signer keyed by the account (signerOf)
+├── given the zero address as signer
+│   └── when installed
+│       └── it should revert with InvalidSigner
+└── given the credential was set then uninstalled
+    └── when onUninstall is called
+        └── it should clear the signer (signerOf == 0)

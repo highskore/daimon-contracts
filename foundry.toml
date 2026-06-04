@@ -1,0 +1,31 @@
+[profile.default]
+evm_version = "cancun"
+src = "src"
+out = "out"
+test = "test"
+script = "script"
+libs = ["node_modules"]
+optimizer = true
+optimizer_runs = 1
+via_ir = false
+verbosity = 3
+ignored_warnings_from = ["node_modules"]
+invariant = { runs = 128, depth = 128, fail_on_revert = true }
+
+[profile.ci]
+fuzz = { runs = 10_000 }
+invariant = { runs = 256, depth = 256, fail_on_revert = true }
+verbosity = 4
+
+[fmt]
+bracket_spacing = true
+int_types = "long"
+line_length = 100
+multiline_func_header = "all"
+number_underscore = "thousands"
+quote_style = "double"
+tab_width = 4
+wrap_comments = false
+
+[lint]
+lint_on_build = false

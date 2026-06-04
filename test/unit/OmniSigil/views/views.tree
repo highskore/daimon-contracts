@@ -1,0 +1,6 @@
+OmniSigil::views
+├── given a config with a per-use value cap and a root node
+│   └── actionConfigs() should return the value cap and root node index
+└── given a limited rule that has accrued usage
+    ├── usageOf() should return the accrued used and the configured limit
+    └── an unlimited rule should read back (0, 0)
