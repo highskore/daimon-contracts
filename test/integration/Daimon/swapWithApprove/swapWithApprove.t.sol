@@ -302,7 +302,7 @@ contract Daimon_swapWithApprove_Integration_Test is Daimon_Integration_Test {
 
     /// @dev The outcome-sigil ConfigId for this mandate (per-execution, keyed by the mandate alone).
     function _cid() internal view returns (ConfigId) {
-        return IdLib.toMandateConfigId(_swapMandateId());
+        return IdLib.toOutcomeConfigId(_swapMandateId());
     }
 
     /// @dev A BIND+USE signature: the inline genesis-style mandate BIND (ROOT-signed) packed with the agent's

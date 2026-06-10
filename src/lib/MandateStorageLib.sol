@@ -49,10 +49,27 @@ library MandateStorageLib {
     /// @param signatureSigils The set of per-mandate ERC-1271 (attestation) {I1271Sigil}s gating the mandate's
     ///        1271 signing path — what typed data / content the agent may sign, and for which requesting
     ///        dApp. Empty => the mandate cannot 1271-sign (default-deny). Tracked per mandate so revoke can
-    ///        fully clear them, and their config is keyed by the mandate alone ({IdLib.toMandateConfigId}),
-    ///        like outcome sigils. APPENDED at the end of the struct (after `execNonceUsed`) per the ERC-7201
-    ///        append-only rule — a new category must never be inserted mid-struct (that would shift every
-    ///        following field's slot and corrupt an in-place upgrade).
+    ///        fully clear them, and their config is keyed by the mandate alone ({IdLib.toSignatureConfigId}) —
+    ///        domain-separated from the outcome tier's {IdLib.toOutcomeConfigId} so the two never collide.
+    ///        APPENDED after `execNonceUsed` per the ERC-7201 append-only rule — a new category must never be
+    ///        inserted mid-struct (that would shift every following field's slot and corrupt an in-place upgrade).
+    /// @param mandateSigils Per-mandate reverse index: the UNION of every sigil address (action / outcome /
+    ///        signature) the mandate registered, keyed by {MandateId}. A sigil holds this account's policy config
+    ///        keyed by `(configId, msg.sender == account)` — and because the engine is BAKED INTO the account, the
+    ///        configuring "multiplexer" IS the account, so a mandate-permitted call to a sigil (also
+    ///        `msg.sender == account`) hits the IDENTICAL config key and can rewrite the very caps/policy that
+    ///        bound the agent (raise its own SpendSigil cap, etc.). This is the confused-deputy surface
+    ///        smart-sessions avoids for free by keeping its module a SEPARATE address from the account
+    ///        (multiplexer != account); Daimon cannot, so the MANDATE path ({EnforcementLib.enforceAction}) — which
+    ///        already has the executing `pid` in hand — default-denies any call whose `to` is one of the mandate's
+    ///        OWN sigils, the sigil-side analogue of the `to == address(this)` self-call guard (config state is
+    ///        sharded across external sigil singletons, so denying `address(this)` alone is insufficient). RESIDUAL:
+    ///        this blocks a mandate from rewriting ITS OWN caps (the headline confused-deputy path); it does NOT
+    ///        block a broad mandate from rewriting a DIFFERENT mandate's sigil config — only reachable when one
+    ///        compromised key holds both mandates (see the SpendSigil composition residual). ROOT takeover/brick is
+    ///        covered separately and fully by the {RootStorageLib} validator-set check. Cleared on revoke/re-bind
+    ///        alongside the other per-mandate sets. APPENDED at the end of the struct per the ERC-7201 append-only
+    ///        rule.
     /// @dev The Mandate's `validUntil` is the BIND-AUTHORIZATION DEADLINE — committed to the MANDATE_BIND digest
     ///      (so the ROOT signer authenticates it) and enforced ONCE at bind time by {MandateEngine}; it is NOT
     ///      persisted in this struct and NOT consulted at runtime. RUNTIME time bounds live in a {TimeFrameSigil}
@@ -67,6 +84,7 @@ library MandateStorageLib {
         mapping(MandateId => EnumerableSetLib.AddressSet) outcomeSigils;
         mapping(uint256 => bool) execNonceUsed;
         mapping(MandateId => EnumerableSetLib.AddressSet) signatureSigils;
+        mapping(MandateId => EnumerableSetLib.AddressSet) mandateSigils;
     }
 
     /// @dev ERC-7201 namespaced storage slot for `daimon.storage.mandate.v1`. Derived as

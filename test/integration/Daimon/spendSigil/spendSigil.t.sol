@@ -362,7 +362,7 @@ contract Daimon_spendSigil_Integration_Test is Daimon_Integration_Test {
 
     /// @dev The outcome-sigil ConfigId for this mandate (per-execution, keyed by the mandate alone).
     function _cid() internal view returns (ConfigId) {
-        return IdLib.toMandateConfigId(_spendSigilMandateId());
+        return IdLib.toOutcomeConfigId(_spendSigilMandateId());
     }
 
     /// @dev Bind the spend-sigil mandate inline at the given exec `nonce`, via a no-op self-transfer of 0.

@@ -25,6 +25,9 @@ library OmniSigilTreeLib {
     error TooManyNodes();
     /// @notice Thrown when a node references a child index out of bounds.
     error NodeChildIndexOutOfBounds();
+    /// @notice Thrown when a node references a child index that is not strictly less than its own index — a
+    ///         forward/self reference that would let the node graph contain a cycle.
+    error NodeChildIndexNotDescending();
     /// @notice Thrown when a leaf node references a rule index out of bounds.
     error RuleIndexOutOfBounds();
 
@@ -94,7 +97,16 @@ library OmniSigilTreeLib {
         return true;
     }
 
-    /// @notice Validate that the expression tree is well-formed (bounds + child/rule indices).
+    /// @notice Validate that the expression tree is well-formed (bounds + child/rule indices) AND acyclic.
+    /// @dev Acyclicity: every child index must be STRICTLY LESS than its parent node's own index. This single
+    ///      topological constraint guarantees the node graph is a DAG (it admits no self- or back-edge), which
+    ///      bounds {evaluateNode}'s recursion depth to `nodeCount` — closing the unbounded-recursion (OOG) brick
+    ///      where a node whose child points to itself or an ancestor (e.g. an AND at index 0 with `leftChild == 0`)
+    ///      would pass the bounds check yet recurse forever. The constraint is free for every real tree: the SDK
+    ///      builders emit nodes children-first (a leaf/subtree always precedes the operator that consumes it), so
+    ///      a child index is already < its parent's. The out-of-bounds checks run FIRST, so a child index
+    ///      `>= nodeCount` still reverts {NodeChildIndexOutOfBounds}; an in-bounds non-descending child reverts
+    ///      {NodeChildIndexNotDescending}.
     /// @param rules The rule set + tree to validate.
     function validateExpressionTree(ParamRules memory rules) internal pure {
         uint256 nodeCount = rules.packedNodes.length;
@@ -112,12 +124,14 @@ library OmniSigilTreeLib {
             if (nodeType == NODE_TYPE_RULE) {
                 require(node.getRuleIndex() < ruleCount, RuleIndexOutOfBounds());
             } else if (nodeType == NODE_TYPE_NOT) {
-                require(node.getLeftChildIndex() < nodeCount, NodeChildIndexOutOfBounds());
+                uint8 left = node.getLeftChildIndex();
+                require(left < nodeCount, NodeChildIndexOutOfBounds());
+                require(left < i, NodeChildIndexNotDescending());
             } else {
-                require(
-                    node.getLeftChildIndex() < nodeCount && node.getRightChildIndex() < nodeCount,
-                    NodeChildIndexOutOfBounds()
-                );
+                uint8 left = node.getLeftChildIndex();
+                uint8 right = node.getRightChildIndex();
+                require(left < nodeCount && right < nodeCount, NodeChildIndexOutOfBounds());
+                require(left < i && right < i, NodeChildIndexNotDescending());
             }
         }
     }
@@ -173,6 +187,11 @@ library OmniSigilTreeLib {
     /*·:⛧:·──────── FILL ────────:⛧:·*/
 
     /// @notice Copy a memory config into storage (clean slate).
+    /// @dev `delete $config.paramRules.rules` followed by re-pushing resets each rule's cumulative
+    ///      `usage.used` counter to 0. This DIFFERS from {SpendSigil} and {RateLimitSigil}, which
+    ///      deliberately preserve their rolling state across re-init so a re-bind cannot clear an exhausted
+    ///      budget. OmniSigil's cumulative argument-level limits ARE reset on every ROOT re-bind — intentional
+    ///      clean-slate semantics, restricted to the ROOT tier.
     /// @param $config The destination storage config.
     /// @param config The source memory config.
     function fill(ActionConfig storage $config, ActionConfig memory config) internal {

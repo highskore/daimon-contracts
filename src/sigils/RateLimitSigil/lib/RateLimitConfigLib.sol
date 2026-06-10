@@ -24,6 +24,10 @@ struct RateLimitConfig {
 ///        it). The window is `[windowStart, windowStart + windowSeconds)`; a later action rolls it forward.
 /// @param count Number of permitted actions charged within the current window.
 /// @param lastActionAt Unix-seconds timestamp of the last permitted action (drives the cooldown check).
+/// @dev All three timestamp fields are `uint32`: `block.timestamp` is cast to `uint32` on every write and
+///      compared as `uint32`, so it wraps to zero after ~year 2106. Past that horizon the window/cooldown
+///      comparisons mis-evaluate (regardless of any mandate fields); the sigil is not designed to operate
+///      beyond it.
 struct RateLimitState {
     uint32 windowStart;
     uint32 count;

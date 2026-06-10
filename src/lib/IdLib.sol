@@ -30,6 +30,11 @@ library IdLib {
     }
 
     /// @notice Derive the `ConfigId` a sigil stores/reads config under, for a (mandate, action).
+    /// @dev Cap and usage state is keyed per-mandate (`pid`): two mandates sharing the same session key
+    ///      (same validator + initData but different `salt` → different `MandateId`) carry INDEPENDENT cap
+    ///      state — their caps do NOT aggregate. A mandate builder issuing multiple mandates to one session
+    ///      key must account for this: each mandate's budget is isolated, and the session key can spend up
+    ///      to each mandate's cap independently.
     /// @param pid The mandate id.
     /// @param aid The action id.
     /// @return The sigil config id.
@@ -44,8 +49,20 @@ library IdLib {
     ///         never collide with a per-action config id.
     /// @param pid The mandate id.
     /// @return The outcome-sigil config id.
-    function toMandateConfigId(MandateId pid) internal pure returns (ConfigId) {
+    function toOutcomeConfigId(MandateId pid) internal pure returns (ConfigId) {
         bytes32 id = keccak256(abi.encodePacked("daimon.outcome", MandateId.unwrap(pid)));
+        return ConfigId.wrap(id);
+    }
+
+    /// @notice Derive the `ConfigId` a per-mandate SIGNATURE (ERC-1271) sigil stores/reads config under, for a
+    ///         mandate. Domain-separated from {toOutcomeConfigId} (outcome) and {toConfigId} (per-action) by a
+    ///         distinct constant tag, so the signature tier can never collide with the outcome tier — even for a
+    ///         single address that implements both {IOutcomeSigil} and {I1271Sigil} and is placed in both slots
+    ///         of one mandate.
+    /// @param pid The mandate id.
+    /// @return The signature-sigil config id.
+    function toSignatureConfigId(MandateId pid) internal pure returns (ConfigId) {
+        bytes32 id = keccak256(abi.encodePacked("daimon.signature", MandateId.unwrap(pid)));
         return ConfigId.wrap(id);
     }
 }

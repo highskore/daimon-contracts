@@ -300,16 +300,23 @@ abstract contract MandateEngine is IMandateEngine {
                     revert UnsupportedSigil(sigil);
                 }
                 $.actionSigils[aid][pid].add(sigil);
+                // Record the sigil in the mandate's reverse index so the MANDATE path can default-deny any agent
+                // call to it — it holds this account's policy config keyed by the account
+                // (see {MandateStorageLib.mandateSigils}).
+                _recordSigil($, pid, sigil);
                 IActionSigil(sigil)
                     .initializeWithMultiplexer(address(this), cid, a.sigils[j].initData);
             }
         }
 
         // Register + initialize the per-execution outcome sigils and the per-mandate signature (ERC-1271)
-        // sigils, mirroring action-sigil wiring. Both share the per-mandate ConfigId (keyed by the mandate
-        // alone, not per-(target, selector)) — {IdLib.toMandateConfigId} is domain-separated from the
-        // per-action id, so the two categories never collide even when one address serves both roles.
-        ConfigId mcid = IdLib.toMandateConfigId(pid);
+        // sigils, mirroring action-sigil wiring. Each tier keys config by the mandate alone (not per-(target,
+        // selector)), but the OUTCOME tier and the SIGNATURE tier use DISTINCT, domain-separated ConfigIds
+        // ({IdLib.toOutcomeConfigId} vs {IdLib.toSignatureConfigId}) — and both are separated from the
+        // per-action id — so the three categories never collide, even for a single address that serves more
+        // than one tier (e.g. a future sigil implementing both {IOutcomeSigil} and {I1271Sigil}).
+        ConfigId ocid = IdLib.toOutcomeConfigId(pid);
+        ConfigId scid = IdLib.toSignatureConfigId(pid);
         for (uint256 i; i < s.outcomeSigils.length; ++i) {
             OutcomeSigilData memory o = s.outcomeSigils[i];
             // Fail-closed at bind: an outcome sigil must advertise {IOutcomeSigil} via ERC-165. This rejects
@@ -320,7 +327,8 @@ abstract contract MandateEngine is IMandateEngine {
                 revert UnsupportedSigil(o.sigil);
             }
             $.outcomeSigils[pid].add(o.sigil);
-            IOutcomeSigil(o.sigil).initializeWithMultiplexer(address(this), mcid, o.initData);
+            _recordSigil($, pid, o.sigil);
+            IOutcomeSigil(o.sigil).initializeWithMultiplexer(address(this), ocid, o.initData);
         }
         for (uint256 i; i < s.signatureSigils.length; ++i) {
             SignatureSigilData memory sg = s.signatureSigils[i];
@@ -333,7 +341,8 @@ abstract contract MandateEngine is IMandateEngine {
                 revert UnsupportedSigil(sg.sigil);
             }
             $.signatureSigils[pid].add(sg.sigil);
-            I1271Sigil(sg.sigil).initializeWithMultiplexer(address(this), mcid, sg.initData);
+            _recordSigil($, pid, sg.sigil);
+            I1271Sigil(sg.sigil).initializeWithMultiplexer(address(this), scid, sg.initData);
         }
 
         // CEI: enable LAST, after every sigil is registered + initialized. A sigil whose
@@ -343,11 +352,33 @@ abstract contract MandateEngine is IMandateEngine {
         emit MandateBound(pid);
     }
 
+    /// @dev Record `sigil` in the mandate's reverse index ({MandateStorageLib.mandateSigils}) so
+    ///      {EnforcementLib.enforceAction} (which has the executing `pid` in hand) can default-deny any agent call
+    ///      whose `to` is one of this mandate's OWN policy sigils — the confused-deputy guard: a sigil's config is
+    ///      keyed by the account, and the baked-in engine makes the account its own multiplexer, so a
+    ///      mandate-permitted call to a sigil could rewrite the caps that bound the agent. The set is the union of
+    ///      the mandate's action / outcome / signature sigils; it is cleared on revoke/re-bind by
+    ///      {_clearMandateSets}.
+    /// @param $ The mandate storage pointer.
+    /// @param pid The mandate registering the sigil.
+    /// @param sigil The sigil address to record.
+    function _recordSigil(
+        MandateStorageLib.MandateStorage storage $,
+        MandateId pid,
+        address sigil
+    )
+        private
+    {
+        $.mandateSigils[pid].add(sigil);
+    }
+
     /// @dev Clear EVERY per-mandate enumerable set for `pid`: each action id and its sigil set, the outcome
-    ///      sigils, and the signature (ERC-1271) sigils. Shared by {_revokeMandate} (kill) and
-    ///      {_registerMandate} (re-bind replace), so neither can leave a stale sigil — in particular a stale
-    ///      signature sigil that would keep a 1271 signing capability the new/empty config dropped. Does NOT
-    ///      touch `enabled`, `signerConf`, or `enableNonce`; the callers manage those.
+    ///      sigils, the signature (ERC-1271) sigils, and the {MandateStorageLib.mandateSigils} reverse index.
+    ///      Shared by {_revokeMandate} (kill) and {_registerMandate} (re-bind replace), so neither can leave a
+    ///      stale sigil — in particular a stale signature sigil that would keep a 1271 signing capability the
+    ///      new/empty config dropped, or a stale `mandateSigils` entry that would keep default-denying a target a
+    ///      re-bind no longer treats as a policy sigil. Does NOT touch `enabled`, `signerConf`, or `enableNonce`;
+    ///      the callers manage those.
     /// @param $ The mandate storage pointer.
     /// @param pid The mandate whose sets to clear.
     function _clearMandateSets(MandateStorageLib.MandateStorage storage $, MandateId pid) private {
@@ -370,6 +401,11 @@ abstract contract MandateEngine is IMandateEngine {
         address[] memory sgs = ss.values();
         for (uint256 i; i < sgs.length; ++i) {
             ss.remove(sgs[i]);
+        }
+        EnumerableSetLib.AddressSet storage ms = $.mandateSigils[pid];
+        address[] memory regd = ms.values();
+        for (uint256 i; i < regd.length; ++i) {
+            ms.remove(regd[i]);
         }
     }
 

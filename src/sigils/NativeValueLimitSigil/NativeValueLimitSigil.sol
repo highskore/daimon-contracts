@@ -71,7 +71,11 @@ contract NativeValueLimitSigil is IActionSigil {
     /*·:⛧:·──────── CHECK ────────:⛧:·*/
 
     /// @inheritdoc IActionSigil
-    /// @dev Permits iff `value <= limit`. Reads no `data` (no argument logic) — native value is the only constraint.
+    /// @dev Permits iff `value <= limit`. Reads no `data` (no argument logic) — native value is the only
+    ///      constraint. This bound is PER-CALL, not per-execution: in a K-call batch each individual call
+    ///      may carry up to `limit` wei, so the total native outflow in one execution can reach K·limit.
+    ///      For a cumulative per-execution or per-period native ceiling, compose with a NATIVE-budget
+    ///      {SpendSigil} (set `token` to the NATIVE sentinel `0xEeee…EEeE`).
     function checkAction(
         ConfigId id,
         address account,
