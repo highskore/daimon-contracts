@@ -11,6 +11,7 @@ import { IOutcomeSigil } from "@interfaces/IOutcomeSigil.sol";
 // Libraries
 import { IdLib } from "@lib/IdLib.sol";
 import { MandateStorageLib } from "@lib/MandateStorageLib.sol";
+import { RootStorageLib } from "@lib/RootStorageLib.sol";
 
 // Types
 import {
@@ -65,6 +66,18 @@ library EnforcementLib {
         address to = to_ == address(0) ? address(this) : to_;
         if (to == address(this)) return false; // no session self-calls (nested-exec bypass guard)
         if (to == FALLBACK_TARGET_FLAG) return false; // the fallback sentinel is never a real call target
+        // The account's auth/policy state is SHARDED across external singletons — its ROOT validators
+        // ({RootStorageLib}) and its policy sigils — each keyed by the account address and mutated on
+        // `msg.sender == account`. During a MANDATE execution the account IS `msg.sender` to any non-self target,
+        // so a call to one of these (e.g. `ECDSAValidator.onInstall` to overwrite the ROOT signer, or a sigil's
+        // `initializeWithMultiplexer` to raise its own cap) is a self-call in disguise. Default-deny them, the
+        // sharded-state analogue of the `to == address(this)` guard above (smart-sessions gets this for free — its
+        // policy module is a SEPARATE address from the account, so the config key never collides; Daimon bakes the
+        // engine into the account, so it must deny explicitly). Validators are a small account-wide set (full ROOT-
+        // takeover coverage); sigils are checked against THIS mandate's own set (`pid` is in hand here) — closing
+        // the headline self-cap-raise. See {MandateStorageLib.mandateSigils} for the cross-mandate residual.
+        if (RootStorageLib.load().validators.contains(to)) return false; // an installed ROOT validator
+        if ($.mandateSigils[pid].contains(to)) return false; // one of THIS mandate's own policy sigils
         ActionId aid = IdLib.toActionId(to, data.length >= 4 ? bytes4(data[0:4]) : bytes4(0));
         address[] memory sigils = $.actionSigils[aid][pid].values();
         if (sigils.length == 0) {
@@ -100,7 +113,7 @@ library EnforcementLib {
     function runPreChecks(MandateStorageLib.MandateStorage storage $, MandateId pid) internal {
         address[] memory sigils = $.outcomeSigils[pid].values();
         if (sigils.length == 0) return;
-        ConfigId cid = IdLib.toMandateConfigId(pid);
+        ConfigId cid = IdLib.toOutcomeConfigId(pid);
         for (uint256 i; i < sigils.length; ++i) {
             IOutcomeSigil(sigils[i]).preCheck(cid, address(this));
         }
@@ -124,7 +137,7 @@ library EnforcementLib {
     {
         address[] memory sigils = $.outcomeSigils[pid].values();
         if (sigils.length == 0) return;
-        ConfigId cid = IdLib.toMandateConfigId(pid);
+        ConfigId cid = IdLib.toOutcomeConfigId(pid);
         for (uint256 i; i < sigils.length; ++i) {
             IOutcomeSigil(sigils[i]).postCheck(cid, address(this), mode, executionData);
         }
@@ -150,7 +163,7 @@ library EnforcementLib {
         returns (bool)
     {
         address[] memory sigils = $.signatureSigils[pid].values();
-        ConfigId cid = IdLib.toMandateConfigId(pid);
+        ConfigId cid = IdLib.toSignatureConfigId(pid);
         for (uint256 i; i < sigils.length; ++i) {
             if (I1271Sigil(sigils[i]).check1271(cid, address(this), gated) != VALIDATION_SUCCESS) {
                 return false;

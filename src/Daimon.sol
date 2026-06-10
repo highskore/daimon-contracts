@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 // Contracts
 import { Initializable } from "solady/utils/Initializable.sol";
 import { UUPSUpgradeable } from "solady/utils/UUPSUpgradeable.sol";
+import { ReentrancyGuardTransient } from "solady/utils/ReentrancyGuardTransient.sol";
 import { Receiver } from "solady/accounts/Receiver.sol";
 import { ERC1271 } from "solady/accounts/ERC1271.sol";
 import { DaimonERC7739 } from "@core/DaimonERC7739.sol";
@@ -50,6 +51,7 @@ import { Mandate, MandateId } from "@types/MandateTypes.sol";
 contract Daimon is
     Initializable,
     UUPSUpgradeable,
+    ReentrancyGuardTransient,
     Receiver,
     DaimonERC7739,
     RootRegistry,
@@ -183,6 +185,11 @@ contract Daimon is
     ///      path enforces the mandate's sigils over *every* call. The signed digest commits to
     ///      `(mode, executionData, nonce, deadline)`. Reverts on failure; the single-use nonce is burned first
     ///      (CEI), but only AFTER the `deadline` check, so an expired payload cannot burn its nonce.
+    ///      `nonReentrant` (solady transient guard): a nested `executeWithSig` would clobber an outer execution's
+    ///      SpendSigil pre-execution balance snapshot — kept in transient storage keyed by `(account, token)`, not
+    ///      per-execution — and zero out its balance-delta backstop, so nested entry is forbidden. The ROOT
+    ///      self-call to `bindMandates`/`installRoot`/`upgrade` is a DIFFERENT function (not a nested
+    ///      `executeWithSig`), so it is not blocked.
     function executeWithSig(
         bytes32 mode,
         bytes calldata executionData,
@@ -193,6 +200,7 @@ contract Daimon is
         external
         payable
         virtual
+        nonReentrant
         returns (bytes[] memory results)
     {
         if (sig.length == 0) revert InvalidSignatureMode(0);

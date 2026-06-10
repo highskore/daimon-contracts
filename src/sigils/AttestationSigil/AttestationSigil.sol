@@ -52,7 +52,10 @@ import {
 ///
 ///      2. STATELESS + VIEW. The 1271 path runs under solady's STATICCALL, so {check1271} is `view` and
 ///         writes no state — the gate is purely an allowlist membership test (no usage accrual; the digest
-///         + session-key binding live in the engine).
+///         + session-key binding live in the engine). Like {Eip3009Sigil}, there is intentionally NO
+///         cumulative or frequency cap on this signing path: a compromised session key can produce unlimited
+///         fresh valid attestations up to whatever the consuming protocol or funding level allows. Mitigate
+///         by minimising per-mandate funding and using short bind windows — revoke promptly on compromise.
 ///
 ///      Configured per account by the {MandateEngine} at bind time via {initializeWithMultiplexer}; keyed by
 ///      `(configId, msg.sender, account)`. The engine is baked into the account, so `msg.sender == account`

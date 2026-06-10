@@ -134,6 +134,12 @@ contract TimeFrameSigil is IActionSigil, I1271Sigil {
     /// @inheritdoc I1271Sigil
     /// @dev Mirrors {checkAction}: enforces the same `[validAfter, validUntil]` window on the ERC-1271 path,
     ///      reading no `content`. A signed message authorized under this policy is only valid inside the window.
+    ///
+    ///      TIME-ONLY gate: because `content` is ignored, placing this sigil ALONE in a mandate's signature
+    ///      slot would authorize signing ANY digest for ANY requesting dApp within the window — it is a
+    ///      REFINEMENT of the signing scope, not a standalone authorization. It must always be composed with
+    ///      a content/sender-binding signature sigil ({AttestationSigil} or {Eip3009Sigil}) that constrains
+    ///      WHAT can be signed; TimeFrameSigil then constrains WHEN.
     function check1271(
         ConfigId id,
         address account,
@@ -149,6 +155,14 @@ contract TimeFrameSigil is IActionSigil, I1271Sigil {
     /// @dev The shared window check used by BOTH {checkAction} and {check1271}.
     ///      Returns {VALIDATION_SUCCESS} iff `block.timestamp >= validAfter` AND
     ///      (`validUntil == 0` OR `block.timestamp <= validUntil`); otherwise {VALIDATION_FAILED}.
+    ///
+    ///      FAIL-OPEN DEFAULT: this is the only sigil with no initialized-guard. An unconfigured
+    ///      `(validAfter=0, validUntil=0)` config returns VALIDATION_SUCCESS — fail-open. This is safe only
+    ///      because the engine guarantees {initializeWithMultiplexer} runs for every bound action/signature
+    ///      sigil under the matching configId before any check; do NOT invoke `_check` on a possibly-
+    ///      uninitialized triple from any other call path. A `(0,0)` window is also intentionally bindable
+    ///      as "open-ended" (no lower bound, no upper bound), so the fail-open default and a deliberate
+    ///      open-ended binding are indistinguishable by design.
     /// @param cfg The stored time-window config for (id, multiplexer, account).
     /// @return A validation code: `VALIDATION_SUCCESS` (in window) or `VALIDATION_FAILED` (outside).
     function _check(TimeFrameConfig storage cfg) private view returns (uint256) {

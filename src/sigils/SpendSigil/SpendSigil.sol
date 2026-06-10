@@ -28,10 +28,10 @@ import { IOutcomeSigil } from "@interfaces/IOutcomeSigil.sol";
 ///          outflow = max(calldata-sum, balanceBefore − balanceAfter)
 ///          spent += outflow ≤ cap   ·   no dangling allowance
 // forgefmt: disable-end
-/// @title SpendSigil — a stateful, rolling-window spend cap (pure outcome guard)
+/// @title SpendSigil — a stateful, tumbling-window spend cap (pure outcome guard)
 /// @author highskore.eth
 /// @notice A per-execution {IOutcomeSigil} that meters one budgeted asset's net outflow from the account against
-///         a cap that resets on a rolling window. The budgeted asset is either an ERC-20 OR — when `token` is the
+///         a cap that resets on a calendar/tumbling window. The budgeted asset is either an ERC-20 OR — when `token` is the
 ///         {NATIVE} sentinel (`0xEeee…EEeE`) — native ETH, bounding a self-relaying agent's native spend per
 ///         period. For an ERC-20 it closes the approval-bypass gap (ERC-1608 §Security): {postCheck} itemizes
 ///         EVERY executed call (the ERC-7579 set it is handed), summing each transfer/approve outflow of the
@@ -46,7 +46,7 @@ import { IOutcomeSigil } from "@interfaces/IOutcomeSigil.sol";
 ///      snapshots `balanceBefore` in EIP-1153 TRANSIENT storage (cancun), keyed by `(account, msg.sender,
 ///      token)` — the budgeted TOKEN, not the ConfigId. Transient storage auto-clears at end-of-tx, and
 ///      {preCheck} re-snapshots per execution so two executions bracketed in one transaction never leak. Only
-///      the rolling `SpendState` is persistent.
+///      the tumbling `SpendState` is persistent.
 ///
 ///      Like every sigil it keys config by `(configId, msg.sender, account)`; the engine is baked into the
 ///      account, so `msg.sender == account` at runtime. This is a PURE outcome sigil: it has no ERC-1271 tier —
@@ -66,8 +66,12 @@ import { IOutcomeSigil } from "@interfaces/IOutcomeSigil.sol";
 ///      parse cannot see (and it matches the prior per-call model — a non-token target contributed zero to the
 ///      sum there too). It is bounded by the controls OUTSIDE the meter: a bounded agent cannot establish the
 ///      pull authority such a sink needs — an in-batch `approve`/`increaseAllowance` IS parsed and charged here,
-///      blanket grants (permit / setApprovalForAll / authorizeOperator) revert {BlanketGrantBlocked}, and any
-///      approve-spender left dangling reverts {DanglingAllowance} — so a standing allowance to an unparsed sink
+///      blanket grants (permit / setApprovalForAll / authorizeOperator) revert {BlanketGrantBlocked} (note:
+///      ERC-777 `send(address,uint256,bytes)` / `operatorSend` on the BUDGETED TOKEN ITSELF are a concrete
+///      example of an unparsed direct-outflow selector — they move tokens without matching the parsed
+///      transfer/approve selectors and are metered only by the maskable balance delta the residual describes,
+///      distinct from the blocked `authorizeOperator` operator-grant), and any approve-spender left dangling
+///      reverts {DanglingAllowance} — so a standing allowance to an unparsed sink
 ///      can only come from the ROOT (owner) tier, which is unconstrained by design (ROOT bypasses the cap
 ///      outright). Within the bounded-agent threat model the residual is therefore unreachable; the per-action
 ///      allowlist further constrains which targets an agent may call at all.
@@ -264,10 +268,10 @@ contract SpendSigil is IOutcomeSigil {
 
     /*·:⛧:·──────── INTERNAL: METER + ACCRUE ────────:⛧:·*/
 
-    /// @dev Charge `max(byCalldata, real balance delta)` to the rolling spend and enforce the cap. The balance
-    ///      delta catches outflows the calldata parse undercounts (an unparsed target, a pull via a granted
-    ///      allowance, a flash trick); the global calldata sum catches outflows a same-execution inflow would
-    ///      mask in the delta. Rolls the period (resetting `spent` across a window boundary) before accruing.
+    /// @dev Charge `max(byCalldata, real balance delta)` to the tumbling-window spend and enforce the cap. The
+    ///      balance delta catches outflows the calldata parse undercounts (an unparsed target, a pull via a
+    ///      granted allowance, a flash trick); the global calldata sum catches outflows a same-execution inflow
+    ///      would mask in the delta. Rolls the period (resetting `spent` across a calendar boundary) before accruing.
     function _accrue(ConfigId id, address account, address token, uint256 byCalldata) private {
         SpendConfig storage cfg = id.getConfig(msg.sender, account);
         uint256 delta =
@@ -306,12 +310,17 @@ contract SpendSigil is IOutcomeSigil {
 
     /*·:⛧:·──────── PERIOD ────────:⛧:·*/
 
-    /// @notice Round `ts` down to the start of its `period` window — the boundary the rolling cap resets
-    ///         on. A charge whose `lastUpdated` predates this boundary belongs to a closed window, so the
-    ///         running `spent` is reset to zero before accruing.
-    /// @param period The rolling window.
+    /// @notice Round `ts` down to the start of its `period` window — the boundary the cap resets on. A
+    ///         charge whose `lastUpdated` predates this boundary belongs to a closed window, so the running
+    ///         `spent` is reset to zero before accruing.
+    /// @dev FIXED / TUMBLING window: boundaries are calendar-aligned (Minute, Hour, Day, Week, Month, Year),
+    ///      NOT anchored to the first spend. Because both sides of a boundary belong to separate windows, up
+    ///      to 2× the cap can be spent across a single period-length span that straddles a boundary (the
+    ///      tail of one period plus the head of the next). This mirrors {RateLimitSigil}'s window model;
+    ///      a true sliding window would require unbounded per-charge timestamp storage.
+    /// @param period The tumbling window.
     /// @param ts The timestamp to round down.
-    /// @return The unix-seconds start of the window containing `ts` (0 for `Forever`, so nothing resets).
+    /// @return The unix-seconds start of the calendar window containing `ts` (0 for `Forever`, so nothing resets).
     function startOfPeriod(Period period, uint256 ts) public pure returns (uint256) {
         if (period == Period.Minute) return ts - (ts % MINUTE);
         if (period == Period.Hour) return ts - (ts % HOUR);
